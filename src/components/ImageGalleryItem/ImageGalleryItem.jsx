@@ -20,6 +20,6 @@ export default function ImageGalleryItem({ url, tags, modalUrl, getTags }) {
 ImageGalleryItem.propTypes = {
   url: PropTypes.string,
   tags: PropTypes.string,
-  modalUrl: PropTypes.string,
-  getTags: PropTypes.string,
+  modalUrl: PropTypes.func,
+  getTags: PropTypes.func,
 };

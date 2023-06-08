@@ -1,61 +1,47 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import ImageGallery from './ImageGallery/ImageGallery';
 import Modal from './Modal/Modal';
 import Searchbar from './Searchbar/Searchbar';
 
-export class App extends Component {
-  state = {
-    page: 1,
-    showModal: false,
+export const App = () => {
+  const [page, setPage] = useState(1);
+  const [modal, showModal] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const [modalUrl, setModalUrl] = useState('');
+  const [tags, setTags] = useState('');
+
+  const getSearchQuery = inputValue => {
+    setInputValue(inputValue);
   };
 
-  getSearchQuery = inputValue => {
-    this.setState({
-      inputValue,
-    });
+  const showNextPage = () => {
+    setPage(page + 1);
   };
 
-  showNextPage = () => {
-    this.setState(prev => ({
-      page: prev.page + 1,
-    }));
+  const modalPhoto = modalUrl => {
+    setModalUrl(modalUrl);
+    toggleModal();
   };
 
-  modalPhoto = modalUrl => {
-    this.setState({
-      modalUrl,
-    });
-    this.toggleModal();
+  const toggleModal = () => {
+    showModal(!modal);
   };
 
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({
-      showModal: !showModal,
-    }));
+  const getTags = tags => {
+    setTags(tags);
   };
 
-  getTags = tags => {
-    this.setState({
-      tags,
-    });
-  };
-
-  render() {
-    const { inputValue, page, modalUrl, showModal, tags } = this.state;
-    return (
-      <>
-        <Searchbar getSearchQuery={this.getSearchQuery} />
-        <ImageGallery
-          inputValue={inputValue}
-          page={page}
-          showNextPage={this.showNextPage}
-          modalUrl={this.modalPhoto}
-          getTags={this.getTags}
-        />
-        {showModal && (
-          <Modal url={modalUrl} toggleModal={this.toggleModal} tags={tags} />
-        )}
-      </>
-    );
-  }
-}
+  return (
+    <>
+      <Searchbar getSearchQuery={getSearchQuery} />
+      <ImageGallery
+        inputValue={inputValue}
+        page={page}
+        showNextPage={showNextPage}
+        modalUrl={modalPhoto}
+        getTags={getTags}
+      />
+      {modal && <Modal url={modalUrl} toggleModal={toggleModal} tags={tags} />}
+    </>
+  );
+};
