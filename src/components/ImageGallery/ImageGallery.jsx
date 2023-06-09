@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 
 import fetchQuery from '../API/API';
 import Loader from '../Loader/Loader';
@@ -6,53 +6,56 @@ import Button from '../Button/Button';
 import ImageGalleryItem from '../ImageGalleryItem/ImageGalleryItem';
 import CSS from './ImageGallery.module.css';
 
-export default class ImageGallery extends Component {
-  state = {
-    photos: [],
-    status: 'none',
-  };
+export const ImageGallery = ({
+  modalUrl,
+  getTags,
+  page,
+  inputValue,
+  showNextPage,
+}) => {
+  const [photos, setPhotos] = useState([]);
+  const [status, setStatus] = useState('none');
+  const [errorMessage, setError] = useState('');
+  const [prevValue, setPrevValue] = useState(inputValue);
+  const [prevPage, setPrevPage] = useState(page);
 
-  loadPhoto = () => {
-    const { inputValue, page } = this.props;
+  const loadPhoto = () => {
     fetchQuery(inputValue, page)
       .then(response => {
-        this.setState({
-          photos: response.hits,
-          status: 'ok',
-        });
+        setPhotos(response.hits);
+        setStatus('ok');
       })
-      .catch(error => this.setState({ status: 'error' }));
+      .catch(error => setError('error ' + errorMessage));
   };
 
-  loadMorePhoto = () => {
-    const { inputValue, page } = this.props;
+  const loadMorePhoto = () => {
     fetchQuery(inputValue, page)
       .then(response => {
-        this.setState(old => ({
-          photos: [...old.photos, ...response.hits],
-          status: 'ok',
-        }));
+        let old = photos;
+        let res = response.hits;
+        let newPhotos = [...old, ...res];
+        setPhotos(newPhotos);
+        setStatus('ok');
       })
-      .catch(error => this.setState({ status: 'error' }));
+      .catch(error => setError('error ' + errorMessage));
   };
 
-  componentDidUpdate(prevProps) {
-    this.scrollWindow();
-    if (prevProps.inputValue !== this.props.inputValue) {
-      this.setState({
-        status: 'pending',
-      });
-      this.loadPhoto();
-    }
-    if (prevProps.page !== this.props.page) {
-      this.setState({
-        status: 'pending',
-      });
-      this.loadMorePhoto();
-    }
-  }
+  useEffect(() => {
+    scrollWindow();
 
-  scrollWindow = () => {
+    if (prevValue !== inputValue) {
+      setStatus('pending');
+      setPrevValue(inputValue);
+      loadPhoto();
+    }
+    if (prevPage !== page) {
+      setStatus('pending');
+      setPrevPage(page);
+      loadMorePhoto();
+    }
+  });
+
+  const scrollWindow = () => {
     window.scrollTo({
       top: document.documentElement.scrollHeight,
       left: 100,
@@ -60,31 +63,28 @@ export default class ImageGallery extends Component {
     });
   };
 
-  render() {
-    const { photos, status } = this.state;
-    if (status === 'pending') {
-      return <Loader />;
-    }
-    if (status === 'ok') {
-      return (
-        <>
-          <ul className={CSS.gallery}>
-            {photos.map(({ id, largeImageURL, tags }) => (
-              <ImageGalleryItem
-                key={id}
-                url={largeImageURL}
-                tags={tags}
-                modalUrl={this.props.modalUrl}
-                getTags={this.props.getTags}
-              />
-            ))}
-          </ul>
-          <Button loadMorePhoto={this.props.showNextPage} />
-        </>
-      );
-    }
-    if (status === 'error') {
-      return alert('Sorry, this query could not be executed, please try again');
-    }
+  if (status === 'pending') {
+    return <Loader />;
   }
-}
+  if (status === 'ok') {
+    return (
+      <>
+        <ul className={CSS.gallery}>
+          {photos.map(({ id, largeImageURL, tags }) => (
+            <ImageGalleryItem
+              key={id}
+              url={largeImageURL}
+              tags={tags}
+              modalUrl={modalUrl}
+              getTags={getTags}
+            />
+          ))}
+        </ul>
+        <Button loadMorePhoto={showNextPage} />
+      </>
+    );
+  }
+  if (status === 'error') {
+    return alert('Sorry, this query could not be executed, please try again');
+  }
+};
